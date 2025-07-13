@@ -1,6 +1,7 @@
 package com.squirrelly_app.file_manager.service;
 
 import com.squirrelly_app.file_manager.Configuration;
+import com.squirrelly_app.file_manager.exception.DirectoryReadException;
 import com.squirrelly_app.file_manager.exception.FileReadException;
 import com.squirrelly_app.file_manager.exception.FileWriteException;
 import com.squirrelly_app.file_manager.model.WriteRequest;
@@ -21,6 +22,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.sql.Timestamp;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 
@@ -121,7 +123,17 @@ public class FileService {
             return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
         }
 
-        try (FileInputStream fileInputStream = new FileInputStream(repositoryPath + fileName)) {
+        String[] directoriesArray = fileName.split("/");
+
+        List<String> directoriesList = Arrays.asList(directoriesArray);
+
+        String adjustedFilename = "/" + String.join("/", directoriesList.subList(2, directoriesList.size()));
+
+        try (FileInputStream fileInputStream = new FileInputStream(repositoryPath + adjustedFilename)) {
+
+            if ("/".equals(adjustedFilename)) {
+                throw new DirectoryReadException("No file specified");
+            }
 
             byte[] bytes = IOUtils.toByteArray(fileInputStream);
 
